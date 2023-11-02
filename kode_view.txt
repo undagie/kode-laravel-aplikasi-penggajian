@@ -1,0 +1,281 @@
+#############################################
+users/index.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Pengguna')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Pengguna</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><strong>Table Data Pengguna</strong></h2>
+                    <a href="{{ route('pengguna.create') }}" class="btn btn-primary btn-md float-right"> Tambah Pengguna</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>NO.</th>
+                                <th>NAMA LENGKAP</th>
+                                <th>EMAIL</th>
+                                <th>LEVEL</th>
+                                <th class="text-center">AKSI</th>
+                            </tr>
+                            @php
+                                $no = 1;
+                            @endphp
+                            @foreach ($users as $user)
+                                <tr>
+                                    <td>{{ $no++ }}</td>
+                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->email }}</td>
+                                    <td>{{ $user->level }}</td>
+                                    <td class="text-center">
+                                        <a href="#" class="btn btn-md btn-warning">EDIT</a>
+                                        <a href="#" class="btn btn-md btn-danger">HAPUS</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+#############################################
+users/tambah.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Pengguna')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Pengguna</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><strong>Tambah Data Pengguna</strong></h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('pengguna.store') }}" method="post">
+                        @csrf
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Nama Lengkap</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="text" name="name" placeholder="Masukkan Nama Lengkap" class="form-control" value="{{ old('name') }}" required>
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Email</label>
+                            <div class="col-sm-4">
+                                <input type="email" name="email" placeholder="Masukkan Email" class="form-control" value="{{ old('email') }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Password</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="password" name="password" placeholder="Masukkan Password" class="form-control" value="{{ old('password') }}" required>
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Level</label>
+                            <div class="col-sm-4">
+                                <select name="level" class="form-control" required>
+                                    <option value="" selected disabled>-- Pilih Level -</option>
+                                    <option value="ADMIN">ADMIN</option>
+                                    <option value="PEGAWAI">PEGAWAI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <button type="submit" class="btn btn-info" id="simpan">SIMPAN</button>
+                            <a href="{{ route('pengguna.index') }}" class="btn btn-danger">BATAL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+#############################################
+UserController.php/store
+#############################################
+
+public function store(Request $request)
+{
+    // memvalidasi inputan
+    $this->validate($request, [
+        'name'      => 'required',
+        'email'     => 'required|email',
+        'password'  => 'required',
+        'level'     => 'required'
+    ]);
+
+    // insert data ke database
+    User::create([
+        'name'      => $request->name,
+        'email'     => $request->email,
+        'password'  => Hash::make($request->password),
+        'level'     => $request->level,
+    ]);
+
+    Alert::success('Sukses', 'Berhasil Menambahkan User Baru');
+    return redirect()->route('pengguna.index');
+}
+
+#############################################
+partials/_error.blade.php
+#############################################
+
+@if ($errors->any())
+    <div class="alert bg-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" ariahidden="true">x</button>
+        <h5><i class="icon fas fa-times"></i>Upps Error!!!</h5>
+
+        @foreach ($errors->all() as $error)
+            <li>
+                {{ $error }}
+            </li>
+        @endforeach
+    </div>
+@endif
+
+#############################################
+modifikasi tombol users/index.blade.php
+#############################################
+
+<td class="text-center">
+   <form action="{{ route('pengguna.destroy', $user->id) }}" method="post">
+       @method('DELETE')
+       @csrf
+       <a href="{{ route('pengguna.edit', $user->id) }}" class="btn btn-md btn-warning">EDIT</a>
+       <button type="submit" class="btn btn-md btn-danger">HAPUS</button>
+   </form>
+</td>
+
+#############################################
+users/edit.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Pengguna')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Pengguna</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><strong>Edit Data Pengguna</strong></h3>
+                </div>
+                <div class="card-body">
+                    @include('partials._error')
+
+                    <form action="{{ route('pengguna.update', $pengguna->id) }}" method="post">
+                        @method('PUT')
+                        @csrf
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Nama Lengkap</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="text" name="name" placeholder="Masukkan Nama Lengkap"
+                                        class="form-control" value="{{ isset($pengguna) ? $pengguna->name : old('name') }}" required>
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Email</label>
+                            <div class="col-sm-4">
+                                <input type="email" name="email" placeholder="Masukkan Email" class="form-control"
+                                    value="{{ isset($pengguna) ? $pengguna->email : old('email') }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Password</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="password" name="password" placeholder="Masukkan Password" class="form-control" value="{{ old('password') }}">
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Level</label>
+                            <div class="col-sm-4">
+                                <select name="level" class="form-control" required>
+                                    <option value="" selected disabled>-- Pilih Level -</option>
+                                    <option value="ADMIN" {{ $pengguna->level == 'ADMIN' ? 'selected' : '' }}>ADMIN</option>
+                                    <option value="PEGAWAI" {{ $pengguna->level == 'PEGAWAI' ? 'selected' : '' }}>PEGAWAI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <button type="submit" class="btn btn-info" id="simpan">SIMPAN</button>
+                            <a href="{{ route('pengguna.index') }}" class="btn btn-danger">BATAL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+#############################################
+UserController.php/edit
+#############################################
+
+public function edit(User $pengguna)
+{
+    return view('users.edit', compact('pengguna'));
+}
+
+#############################################
+UserController.php/update
+#############################################
+
+public function update(Request $request, User $pengguna)
+{
+    // memvalidasi inputan
+    $this->validate($request, [
+        'name'      => 'required',
+        'email'     => 'required|email',
+        'password'  => 'nullable',
+        'level'     => 'required',
+    ]);
+
+    // update data ke database
+    $pengguna->update([
+        'name'      => $request->name,
+        'email'     => $request->email,
+        'password'  => is_null($request->password) ? $pengguna->password : Hash::make($request->password),
+        'level'     => $request->level,
+    ]);
+
+    Alert::success('Sukses', 'Berhasil Mengupdate Pengguna');
+    return redirect()->route('pengguna.index');
+}
+
+#############################################
+UserController.php/destroy
+#############################################
+
+public function destroy(User $pengguna)
+{
+    $pengguna->destroy($pengguna->id);
+    Alert::success('Sukses', 'Berhasil Menghapus Pengguna');
+    return redirect()->route('pengguna.index');
+}
