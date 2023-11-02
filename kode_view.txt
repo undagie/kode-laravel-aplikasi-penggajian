@@ -279,3 +279,326 @@ public function destroy(User $pengguna)
     Alert::success('Sukses', 'Berhasil Menghapus Pengguna');
     return redirect()->route('pengguna.index');
 }
+
+#############################################
+partials/_action.blade.php
+#############################################
+
+<div class="btn-group" role="group">
+    <form action="{{ route('jabatan.destroy', $form_url) }}" method="post" class="form-inline">
+        @method('DELETE')
+        @csrf
+        <a class="btn btn-sm btn-warning" href="{{ $edit_url }}"><i class="fa fa-edit"></i> Edit</a> &nbsp;
+        <button type="submit" onclick="return confirm('Anda Yakin?')" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Hapus</button>
+    </form>
+</div>
+
+#############################################
+kode method getJabatan
+#############################################
+
+public function getJabatan(Request $request)
+{
+    if ($request->ajax()) {
+        $jabatan = Jabatan::all();
+        return DataTables::of($jabatan)
+            ->editColumn('aksi', function ($jabatan) {
+                return view('partials._action', [
+                    'model' => $jabatan,
+                    'form_url' => route('jabatan.destroy', $jabatan->id),
+                    'edit_url' => route('jabatan.edit', $jabatan->id),
+                ]);
+            })
+            ->addIndexColumn()
+            ->rawColumns(['aksi'])
+            ->make(true);
+    }
+}
+
+#############################################
+jabatan/index.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Jabatan')
+@section('plugins.Datatables', true)
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Jabatan</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+
+                <div class="card-header">
+                    <h2 class="card-title"><strong>Table Data Jabatan</strong></h2>
+                    <a href="{{ route('jabatan.create') }}" class="btn btn-primary btn-md float-right"> Tambah Jabatan</a>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="jabatan">
+                            <thead>
+                                <tr>
+                                    <th>NO.</th>
+                                    <th>NAMA JABATAN</th>
+                                    <th>GAJI POKOK</th>
+                                    <th>TUNJANGAN</th>
+                                    <th>UANG MAKAN</th>
+                                    <th class="text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+@push('js')
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var dataTable = $('#jabatan').DataTable({
+                processing: true,
+                serverSide: true,
+                autoWidth: false,
+                stateSave: true,
+                // scrollX: true,
+                "order": [
+                    [0, "desc"]
+                ],
+                ajax: '{{ route('get.jabatan') }}',
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'nama_jabatan',
+                        name: 'nama_jabatan'
+                    },
+                    {
+                        data: 'gapok_jabatan',
+                        name: 'gapok_jabatan'
+                    },
+                    {
+                        data: 'tunjangan_jabatan',
+                        name: 'tunjangan_jabatan'
+                    },
+                    {
+                        data: 'uang_makan_perhari',
+                        name: 'uang_makan_perhari'
+                    },
+                    {
+                        data: 'aksi',
+                        name: 'aksi',
+                        orderable: false,
+                        searchable: false,
+                        'sClass': 'text-center'
+                    }
+                ]
+            });
+        });
+    </script>
+@endpush
+
+#############################################
+JabatanController.php/store
+#############################################
+
+public function store(Request $request)
+{
+    // memvalidasi inputan
+    $this->validate($request, [
+        'nama_jabatan'       => 'required',
+        'gapok_jabatan'      => 'required|numeric',
+        'tunjangan_jabatan'  => 'required|numeric',
+        'uang_makan_perhari' => 'required|numeric',
+    ]);
+
+    // insert data ke database
+    Jabatan::create($request->all());
+
+    Alert::success('Sukses', 'Berhasil Menambahkan Jabatan Baru');
+    return redirect()->route('jabatan.index');
+}
+
+#############################################
+jabatan/tambah.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Jabatan')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Jabatan</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+
+                <div class="card-header">
+                    <h3 class="card-title"><strong>Tambah Data Jabatan</strong></h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('jabatan.store') }}" method="post">
+                        @csrf
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Nama Jabatan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="text" name="nama_jabatan" placeholder="Manager Produksi"
+                                        class="form-control" value="{{ old('nama_jabatan') }}" required>
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Gaji Pokok</label>
+                            <div class="col-sm-4">
+                                <input type="number" name="gapok_jabatan" placeholder="Rp.0" class="form-control" value="{{ old('gapok_jabatan') }}" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Tunjangan Jabatan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="number" name="tunjangan_jabatan" placeholder="Rp.0" class="form-control" value="{{ old('tunjangan_jabatan') }}" required>
+                                </div>
+                            </div>
+                            <label class="form-label col-sm-2">Insentif Uang Makan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="number" name="uang_makan_perhari" placeholder="Rp.0" class="form-control" value="{{ old('uang_makan_perhari') }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-center">
+                            <button type="submit" class="btn btn-info" id="simpan">SIMPAN</button>
+                            <a href="{{ route('jabatan.index') }}" class="btn btn-danger">BATAL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+#############################################
+JabatanController.php/edit
+#############################################
+
+public function edit(Jabatan $jabatan)
+{
+    return view('masterdata.jabatan.edit', compact('jabatan'));
+}
+
+#############################################
+JabatanController.php/update
+#############################################
+
+public function update(Request $request, Jabatan $jabatan)
+{
+    // memvalidasi inputan
+    $this->validate($request, [
+        'nama_jabatan'        => 'required',
+        'gapok_jabatan'       => 'required|numeric',
+        'tunjangan_jabatan'   => 'required|numeric',
+        'uang_makan_perhari'  => 'required|numeric',
+    ]);
+
+    // insert data ke database
+    $jabatan->update($request->all());
+
+    Alert::success('Sukses', 'Berhasil Mengupdate Jabatan ');
+    return redirect()->route('jabatan.index');
+}
+
+#############################################
+jabatan/edit.blade.php
+#############################################
+
+@extends('adminlte::page')
+
+@section('title', 'Data Jabatan')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Data Jabatan</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+
+                <div class="card-header">
+                    <h3 class="card-title"><strong>Edit Data Jabatan</strong></h3>
+                </div>
+
+                <div class="card-body">
+                    @include('partials._error')
+
+                    <form action="{{ route('jabatan.update', $jabatan->id) }}" method="post">
+                        @method('PUT')
+                        @csrf
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Nama Jabatan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="text" name="nama_jabatan" placeholder="Manager Produksi" class="form-control"
+                                        value="{{ isset($jabatan) ? $jabatan->nama_jabatan : old('nama_jabatan') }}" required>
+                                </div>
+                            </div>
+
+                            <label class="form-label col-sm-2">Gaji Pokok</label>
+                            <div class="col-sm-4">
+                                <input type="number" name="gapok_jabatan" placeholder="Rp.0" class="form-control"
+                                    value="{{ isset($jabatan) ? $jabatan->gapok_jabatan : old('gapok_jabatan') }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="form-label col-sm-2">Tunjangan Jabatan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="number" name="tunjangan_jabatan" placeholder="Rp.0" class="form-control"
+                                        value="{{ isset($jabatan) ? $jabatan->tunjangan_jabatan : old('tunjangan_jabatan') }}" required>
+                                </div>
+                            </div>
+
+                            <label class="form-label col-sm-2">Insentif Uang Makan</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input type="number" name="uang_makan_perhari" placeholder="Rp.0" class="form-control"
+                                        value="{{ isset($jabatan) ? $jabatan->uang_makan_perhari : old('uang_makan_perhari') }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-center">
+                            <button type="submit" class="btn btn-info" id="simpan">SIMPAN</button>
+                            <a href="{{ route('jabatan.index') }}" class="btn btn-danger">BATAL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+#############################################
+JabatanController.php/destroy
+#############################################
+
+public function destroy(Jabatan $jabatan)
+{
+    $jabatan->destroy($jabatan->id);
+    Alert::success('Sukses', 'Berhasil Menghapus Jabatan ');
+    return redirect()->route('jabatan.index');
+}
