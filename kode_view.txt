@@ -692,7 +692,7 @@ jabatan/_pdf.blade.php
             <td>{{ $jb->nama_jabatan }}</td>
             <td>{{ $jb->gapok_jabatan }}</td>
             <td>{{ $jb->tunjangan_jabatan }}</td>
-            <td>{{ $jb->uang_makan }}</td>
+            <td>{{ $jb->uang_makan_perhari }}</td>
         </tr>
         @endforeach
     </table>
@@ -752,7 +752,7 @@ jabatan/chart.blade.php
                     type: 'bar',
                     data: {
                         labels: labels, datasets: [{
-                            label: 'Transaksi Status',
+                            label: 'Besaran Gaji',
                             data: data,
                             backgroundColor: 'rgba(75, 192, 192, 1)',
 
@@ -784,6 +784,13 @@ public function getGrafik()
     return response()->json([
         'data' => $jabatan
     ]);
+}
+
+public function exportExcel()
+{
+    $jabatan = Jabatan::all();
+
+    return view('masterdata.jabatan._excel', compact('jabatan'));
 }
 
 #############################################
@@ -841,7 +848,7 @@ header("Content-Disposition: attachment; filename=export_gaji_per_jabatan.xls");
             <td>{{ $jb->nama_jabatan }}</td>
             <td>{{ $jb->gapok_jabatan }}</td>
             <td>{{ $jb->tunjangan_jabatan }}</td>
-            <td>{{ $jb->uang_makan }}</td>
+            <td>{{ $jb->uang_makan_perhari }}</td>
         </tr>
         @endforeach
     </table>
